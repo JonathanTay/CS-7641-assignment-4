@@ -1,0 +1,166 @@
+<html>
+<head>
+<style>
+  .colorpicker { display:block; height:25px; width:25px; float:left; border: 1px solid white;}
+  .colorvalue { width: 25px; height: 25px; float: left; }
+  .palette { background: black; float:left; display:block; width:200px; height:600px; padding: 10px;}
+  .paletteRow { display:block; float: none; margin: 5px; height: 30px; vertical-align: middle; padding: 2px;}
+  .selectedRow { border: 1px solid yellow; }
+  .paletteLabel { color: White; float: left; }
+</style>
+</head>
+<body>
+  <canvas id="canvas" width="600px" height="600px" style="float:left"></canvas>
+  <div id="palette" class="palette">
+    <div class="paletteRow">
+      <span class="paletteLabel">World Size:</span><br/><input type="text" id="gridsizeText" class="colorvalue" value="20" /><input type="button" value="Reset" onclick="resetGrid()" /><br/>
+    </div><br/>
+    <div class="paletteRow">
+      <span class="colorpicker" style="background:red" onclick="swapColor('red',document.getElementById('val1').value)">&nbsp;</span><input id="val1" type="text" class="colorvalue" value="-5" />
+    </div>
+    <div class="paletteRow">
+      <span class="colorpicker" style="background:orange" onclick="swapColor('orange',document.getElementById('val2').value)">&nbsp;</span><input id="val2" type="text" class="colorvalue" value="-3" />
+    </div>
+    <div class="paletteRow">
+      <span class="colorpicker" style="background:yellow" onclick="swapColor('yellow',document.getElementById('val3').value)">&nbsp;</span><input id="val3" type="text" class="colorvalue" value="-1" />
+    </div>
+    <div class="paletteRow">
+      <span class="colorpicker" style="background:black" onclick="swapColor('black',document.getElementById('val4').value)">&nbsp;</span><input id="val4" type="text" class="colorvalue" value="1" />
+    </div>
+    <div class="paletteRow">
+      <span class="colorpicker" style="background:blue" onclick="swapColor('blue',document.getElementById('val5').value)">&nbsp;</span><input id="val5" type="text" class="colorvalue" value="3" />
+    </div>
+    <div class="paletteRow">
+      <span class="colorpicker" style="background:green" onclick="swapColor('green',document.getElementById('val6').value)">&nbsp;</span><input id="val6" type="text" class="colorvalue" value="5" />
+    </div>
+  </div>
+  <div id="gridOutput"></div>
+  <script language="JavaScript">
+  var canvas = document.getElementById("canvas");
+  var c = canvas.getContext("2d");
+
+  var gridWidth = 20;
+  var gridHeight = 20;
+  var boxSize = 600 / gridWidth;
+  var grid = new Array(gridHeight);
+
+  var mousedown = false;
+  var mouse1 = false;
+  var mouse2 = false;
+  //canvas.addEventListener('click', handleClick);
+  canvas.addEventListener('mousedown', handleMousedown);
+  canvas.addEventListener('mousemove', handleMousemove);
+  canvas.addEventListener('mouseup', handleMouseup);
+  canvas.addEventListener('mouseout', handleMouseup);
+  canvas.addEventListener('contextmenu', handleContext);
+  var currentColor = 'black';
+  var currentValue = 1;
+  function resetGrid() {
+    var gridSize = document.getElementById('gridsizeText').value;
+    gridWidth = gridSize;
+    gridHeight = gridSize;
+    boxSize = 600 / gridSize;
+    grid = new Array(gridHeight);
+    for (var h=0; h<gridHeight; h++) {
+      grid[h] = new Array(gridWidth);
+      for (var w=0; w<gridWidth; w++) {
+        grid[h][w] = 0;
+      }
+    }
+    drawBox();
+  }
+  function swapColor(c,v) {
+    currentColor = c;
+    currentValue = v;
+  }
+  function drawBox() {
+    c.clearRect(0,0,canvas.width,canvas.height);
+    c.beginPath();
+    c.fillStyle = "white";
+    c.lineWidth = 1;
+    c.strokeStyle = 'black';
+    for (var row = 0; row < gridHeight; row++) {
+      for (var column = 0; column < gridWidth; column++) {
+        grid[row][column] = 0;
+        var x = column * boxSize;
+        var y = row * boxSize;
+        c.rect(x, y, boxSize, boxSize);
+        c.fill();
+        c.stroke();
+      }
+    }
+    c.closePath();
+  }
+
+  function handleClick(e) {
+  }
+  function updateGridOutput()
+  {
+    var s = "[";
+    for (var row = 0; row < gridHeight; row++) {
+      s += "[";
+      for (var column = 0; column < gridWidth; column++) {
+        s += grid[row][column];
+        if (column < gridWidth - 1)
+          s += ",";
+      }
+      //s = s.substring(0,s.length-1);
+      s += "]";
+      if (row < gridHeight - 1)
+      {
+        s += ",";
+        s += "<br/>";
+      }
+      //console.log(s);
+    }
+    s += "]";
+    //console.log(grid);
+    //alert(s);
+    document.getElementById("gridOutput").innerHTML = s;
+  }
+  function handleMousemove(e) {
+    if (!(mouse1 || mouse2) || (mouse1 && mouse2))
+      return;
+
+    var val = currentValue;
+    var col = currentColor;
+    if (mouse2) {
+      val = 0;
+      col = 'white';
+    }
+
+    c.fillStyle = col;
+
+    gridRow = Math.floor(e.offsetY / boxSize);
+    gridCol = Math.floor(e.offsetX / boxSize);
+
+    grid[gridRow][gridCol] = val;
+    c.fillRect(gridCol * boxSize + 1, gridRow * boxSize + 1, boxSize - 2, boxSize - 2);
+  }
+  function handleMousedown(e) {
+    if (e.button == 0)
+      mouse1 = true;
+    if (e.button == 2)
+      mouse2 = true;
+    handleMousemove(e);
+  }
+  function handleMouseup(e) {
+    if (mouse1 || mouse2) {
+      if (e.button == 0)
+        mouse1 = false;
+      if (e.button == 2)
+        mouse2 = false;
+      updateGridOutput();
+      //e.preventDefault();
+    }
+  }
+  function handleContext(e) {
+    e.preventDefault();
+    return false;
+  }
+  resetGrid();
+  //drawBox();
+  </script>
+
+</body>
+</html>
